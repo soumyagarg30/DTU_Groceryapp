@@ -6,7 +6,7 @@ import type { ComparisonResult, HotQuery, Listing, ProviderName, SearchResponse 
 
 const STARTER_QUERIES = ['Maggi', 'Milk', 'Bread', 'Eggs', 'Butter']
 
-function money(value?: number) { return value === undefined ? '—' : `₹${value.toFixed(value % 1 ? 2 : 0)}` }
+function money(value?: number | null) { return value == null || !Number.isFinite(value) ? '—' : `₹${value.toFixed(value % 1 ? 2 : 0)}` }
 function providerLabel(provider: ProviderName) { return provider === 'blinkit' ? 'Blinkit' : 'Zepto' }
 function ageLabel(age: number, cached: boolean) {
   if (age < 60) return cached ? `Cached result • ${age}s old` : `Checked ${age}s ago`
@@ -22,16 +22,16 @@ function ProviderListing({ listing, provider, unavailable }: { listing?: Listing
   return <div className="listing">
     <div className="listing-heading"><Store size={15} />{providerLabel(provider)}<span className={listing.available ? 'availability' : 'availability muted'}>{listing.available ? 'In stock' : 'Unavailable'}</span></div>
     <div className="price-row"><strong>{money(listing.price)}</strong>{listing.mrp && listing.mrp > listing.price && <del>{money(listing.mrp)}</del>}</div>
-    {listing.unit_price !== undefined && <p className="unit-price">{money(listing.unit_price)} / {listing.unit_price_basis}</p>}
+    {listing.unit_price != null && <p className="unit-price">{money(listing.unit_price)} / {listing.unit_price_basis}</p>}
     <p>{listing.quantity_text ?? 'Quantity unavailable'}</p><p className="verified">✓ DTU verified</p>
   </div>
 }
 
-function ComparisonCard({ result, providerStatus, onAdd, added, full }: { onAdd: () => void; added: boolean; full: boolean; result: ComparisonResult; providerStatus: SearchResponse['provider_status'] }) {
+export function ComparisonCard({ result, providerStatus, onAdd, added, full }: { onAdd: () => void; added: boolean; full: boolean; result: ComparisonResult; providerStatus: SearchResponse['provider_status'] }) {
   const missingProvider: ProviderName = result.blinkit ? 'zepto' : 'blinkit'
   const hasBoth = Boolean(result.blinkit && result.zepto)
   const savings = result.cheaper_provider && result.cheaper_provider !== 'same_price'
-    ? `${money(result.price_difference)} cheaper on ${providerLabel(result.cheaper_provider)}${result.savings_percentage !== undefined ? ` • ${result.savings_percentage}% less` : ''}`
+    ? `${money(result.price_difference)} cheaper on ${providerLabel(result.cheaper_provider)}${result.savings_percentage != null ? ` • ${result.savings_percentage}% less` : ''}`
     : result.cheaper_provider === 'same_price' ? 'Same price' : null
   const message = result.match_confidence === 'unmatched'
     ? providerStatus[missingProvider] === 'unavailable' ? 'Cross-store price comparison unavailable' : `Not confidently matched on ${providerLabel(missingProvider)}`

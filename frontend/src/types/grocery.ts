@@ -4,29 +4,31 @@ export type ProviderStatus = 'ok' | 'unavailable' | 'empty'
 export interface Listing {
   title: string
   price: number
-  mrp?: number
+  mrp?: number | null
   currency: string
-  quantity_text?: string
+  quantity_text?: string | null
   available: boolean
   product_url?: string
   source: ProviderName
-  unit_price?: number
-  unit_price_basis?: string
+  unit_price?: number | null
+  observation_id?: string
+  price_history?: { at: string; price: number }[]
+  unit_price_basis?: string | null
 }
 
 export interface ComparisonResult {
   match_id: string
   canonical_name: string
   brand?: string
-  quantity: { value?: number; unit?: string }
-  match_score?: number
+  quantity: { value?: number | null; unit?: string }
+  match_score?: number | null
   match_confidence: 'high' | 'medium' | 'unmatched'
   blinkit?: Listing
   zepto?: Listing
   cheaper_provider?: ProviderName | 'same_price'
-  price_difference?: number
-  savings_percentage?: number
-  query_relevance_score?: number
+  price_difference?: number | null
+  savings_percentage?: number | null
+  query_relevance_score?: number | null
   match_reasons: string[]
   match_details?: {
     brand_score: number

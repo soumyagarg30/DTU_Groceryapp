@@ -85,9 +85,26 @@ class SearchService:
     def __init__(self, providers: dict[str, GroceryProvider], cache_ttl_seconds: int = settings.cache_ttl_seconds, cache: HotQueryCache | None = None):
         self.providers = providers
         self.cache = cache or HotQueryCache(ttl_seconds=cache_ttl_seconds)
+        self.inflight: dict[tuple[str, str], asyncio.Task] = {}
         self.provider_locks = {name: asyncio.Lock() for name in providers}
 
     async def search(self, query: str, location: str = "DTU") -> SearchResponse:
+        if not 2 <= len(query.strip()) <= 100 or location != "DTU":
+            raise ValueError("Search requires 2–100 characters and DTU delivery")
+        key = self.cache.key(query, location)
+        task = self.inflight.get(key)
+        if task is None:
+            task = asyncio.create_task(self._search(query, location))
+            self.inflight[key] = task
+            def finished(done):
+                if self.inflight.get(key) is done:
+                    self.inflight.pop(key, None)
+                if not done.cancelled():
+                    done.exception()
+            task.add_done_callback(finished)
+        return await asyncio.shield(task)
+
+    async def _search(self, query: str, location: str = "DTU") -> SearchResponse:
         cleaned_query = query.strip()
         if not 2 <= len(cleaned_query) <= 100:
             raise ValueError("Search query must be between 2 and 100 characters")

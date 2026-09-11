@@ -146,22 +146,22 @@ class DesktopWebsiteProvider(GroceryProvider):
         raise NotImplementedError
 
     async def _wait_for_cards_or_empty(self, page, card_selectors: tuple[str, ...], empty_selectors: tuple[str, ...], timeout_ms: int = 15000):
-        for selector in card_selectors:
-            cards = page.locator(selector)
-            try:
-                await cards.first.wait_for(state="visible", timeout=timeout_ms)
-                if settings.provider_debug:
-                    samples = []
-                    for index in range(min(await cards.count(), 3)):
-                        samples.append((await cards.nth(index).inner_text())[:300].replace("\n", " "))
-                    logger.info("provider_diagnostics provider=%s url=%s location=%s cards=%d samples=%s", self.name, page.url, self.resolved_location, await cards.count(), samples)
-                return cards
-            except Exception:
-                continue
-        for selector in empty_selectors:
-            empty = page.locator(selector).first
-            if await empty.count() and await empty.is_visible():
-                return None
+        # Give all candidate selectors one shared deadline. Waiting 15 seconds
+        # on each obsolete selector made a five-selector search take 75 seconds.
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout_ms / 1000
+        while True:
+            for selector in card_selectors:
+                cards = page.locator(selector)
+                if await cards.count() and await cards.first.is_visible():
+                    return cards
+            for selector in empty_selectors:
+                empty = page.locator(selector).first
+                if await empty.count() and await empty.is_visible():
+                    return None
+            if loop.time() >= deadline:
+                break
+            await asyncio.sleep(min(0.15, max(0, deadline - loop.time())))
         body_text = (await page.locator("body").inner_text())
         await self._capture_debug(page, "search_failure")
         if self._is_blocked_text(body_text.lower()):

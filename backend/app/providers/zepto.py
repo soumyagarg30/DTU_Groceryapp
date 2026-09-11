@@ -2,7 +2,7 @@ import re
 
 from .base import ProviderSearchError
 from .browser import DesktopWebsiteProvider
-from .parsing import listing_from_card
+from .parsing import listings_from_cards
 
 
 class ZeptoProvider(DesktopWebsiteProvider):
@@ -87,10 +87,8 @@ class ZeptoProvider(DesktopWebsiteProvider):
         if cards is None:
             return []
 
-        listings = []
-        for index in range(min(await cards.count(), 200)):
-            listing = await listing_from_card(
-                cards.nth(index),
+        listings = await listings_from_cards(
+                cards,
                 "zepto",
                 self.homepage_url,
                 ("[data-testid*='name' i]", "h3", "h2", "h4", "[title]"),
@@ -98,8 +96,6 @@ class ZeptoProvider(DesktopWebsiteProvider):
                 ("del", "s", "[data-testid*='mrp' i]"),
                 ("[data-testid*='quantity' i]", "[class*='quantity' i]", "[class*='weight' i]"),
             )
-            if listing:
-                listings.append(listing)
         if not listings:
             raise ProviderSearchError("extraction_failure", "Zepto cards were visible but product fields could not be extracted")
         return listings

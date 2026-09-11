@@ -1,3 +1,4 @@
+import asyncio
 import re
 from datetime import datetime, timezone
 from urllib.parse import urljoin
@@ -101,3 +102,15 @@ async def listing_from_card(card: Locator, provider: str, base_url: str, title_s
         fetched_at=datetime.now(timezone.utc),
         metadata={"card_text": card_text[:500]},
     )
+
+
+async def listings_from_cards(cards, *args):
+    """Bound browser round trips while preserving provider display order."""
+    semaphore = asyncio.Semaphore(6)
+
+    async def parse(index):
+        async with semaphore:
+            return await listing_from_card(cards.nth(index), *args)
+
+    results = await asyncio.gather(*(parse(i) for i in range(min(await cards.count(), 200))))
+    return [listing for listing in results if listing is not None]

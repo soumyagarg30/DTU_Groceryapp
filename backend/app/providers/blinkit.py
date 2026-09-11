@@ -2,7 +2,7 @@ import re
 
 from .base import ProviderSearchError
 from .browser import DesktopWebsiteProvider
-from .parsing import listing_from_card
+from .parsing import listings_from_cards
 
 
 class BlinkitProvider(DesktopWebsiteProvider):
@@ -104,11 +104,7 @@ class BlinkitProvider(DesktopWebsiteProvider):
             cards = await self._wait_for_cards_or_empty(page, self.card_selectors, ("text=No products", "text=No results"))
         if cards is None:
             return []
-        listings = []
-        for index in range(min(await cards.count(), 200)):
-            listing = await listing_from_card(cards.nth(index), "blinkit", self.homepage_url, ("[data-testid*='name' i]", "h3", "h2", "a[href*='/prn/']"), ("[data-testid*='price' i]", "[class*='price' i]"), ("del", "[data-testid*='mrp' i]"), ("[data-testid*='quantity' i]", "[class*='quantity' i]"))
-            if listing:
-                listings.append(listing)
+        listings = await listings_from_cards(cards, "blinkit", self.homepage_url, ("[data-testid*='name' i]", "h3", "h2", "a[href*='/prn/']"), ("[data-testid*='price' i]", "[class*='price' i]"), ("del", "[data-testid*='mrp' i]"), ("[data-testid*='quantity' i]", "[class*='quantity' i]"))
         if not listings:
             sample = (await cards.first.inner_text())[:300].replace("\n", " ") if await cards.count() else "none"
             raise ProviderSearchError("extraction_failure", f"Blinkit cards were visible but fields could not be extracted sample={sample}")

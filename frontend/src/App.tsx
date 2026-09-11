@@ -66,7 +66,7 @@ function App() {
     const cleaned = value.trim()
     if (cleaned.length < 2 || loading) return
     setQuery(cleaned); setLoading(true); setError('')
-    try { setData(await searchGroceries(cleaned)); setHotQueries(await getHotQueries()) }
+    try { setData(await searchGroceries(cleaned)); void getHotQueries().then(setHotQueries).catch(() => {}) }
     catch (caught) { setData(null); setError(caught instanceof Error ? caught.message : 'The grocery service is unavailable.') }
     finally { setLoading(false) }
   }

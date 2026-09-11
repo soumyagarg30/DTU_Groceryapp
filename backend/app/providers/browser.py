@@ -86,6 +86,7 @@ class DesktopWebsiteProvider(GroceryProvider):
         self.resolved_location = None
         await page.locator("body").wait_for(state="visible")
         page_text = (await page.locator("body").inner_text()).lower()
+        self._check_login_required(page_text)
         if self._is_blocked_text(page_text):
             raise ProviderSearchError("blocked", f"{self.name} desktop website blocked automated access")
         self.resolved_location = await self._resolved_location_text(page)
@@ -136,6 +137,17 @@ class DesktopWebsiteProvider(GroceryProvider):
         )
 
     @staticmethod
+    def _check_login_required(text: str) -> None:
+        normalized = " ".join(text.lower().split())
+        # A normal header Login button is not a search access restriction.
+        if any(message in normalized for message in (
+            "please login to continue searching",
+            "please log in to continue searching",
+            "sign in to continue searching",
+        )):
+            raise ProviderSearchError("login_required", "Sign in to the provider browser to continue searching")
+
+    @staticmethod
     def _is_blocked_text(text: str) -> bool:
         return any(marker in text for marker in ("request blocked", "access denied", "you have been blocked", "automated access", "captcha"))
 
@@ -151,6 +163,10 @@ class DesktopWebsiteProvider(GroceryProvider):
         loop = asyncio.get_running_loop()
         deadline = loop.time() + timeout_ms / 1000
         while True:
+            body_text = await page.locator("body").inner_text()
+            self._check_login_required(body_text)
+            if self._is_blocked_text(body_text.lower()):
+                raise ProviderSearchError("blocked", f"{self.name} desktop website blocked automated access")
             for selector in card_selectors:
                 cards = page.locator(selector)
                 if await cards.count() and await cards.first.is_visible():

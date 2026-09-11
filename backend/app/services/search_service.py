@@ -162,7 +162,7 @@ class SearchService:
             cache=CacheMetadata(hit=False, age_seconds=0, fetched_at=datetime.now(timezone.utc)),
             pipeline=PipelineMetadata(**pipeline_counts(raw_counts, deduplicated_counts, candidate_pairs, len(matches), len(response_results))),
         )
-        if blinkit_status != "unavailable" or zepto_status != "unavailable":
+        if (blinkit_status != "unavailable" or zepto_status != "unavailable") and "login_required" not in (blinkit_message, zepto_message):
             self.cache.put(cleaned_query, location, response)
         return response
 

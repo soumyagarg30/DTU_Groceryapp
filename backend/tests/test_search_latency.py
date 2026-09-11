@@ -9,6 +9,7 @@ async def test_fallback_selector_is_checked_without_waiting_for_first():
     class Locator:
         first = property(lambda self: self)
         def __init__(self, visible): self.visible = visible
+        async def inner_text(self): return "Product results"
         async def count(self): return int(self.visible)
         async def is_visible(self): return self.visible
     class Page:

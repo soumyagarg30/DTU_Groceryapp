@@ -12,6 +12,17 @@ class BlinkitProvider(DesktopWebsiteProvider):
     search_inputs = ("input[placeholder*='Search for products' i]", "input[placeholder*='Search' i]")
     card_selectors = ("button:has-text('ADD')", "[data-testid*='product' i]", "[data-test*='product' i]", "a[href*='/prn/']", "div[role='article']")
 
+    async def establish_location(self, location: str) -> None:
+        # Blinkit's search layout hides the delivery header. Re-open the home
+        # layout before verification instead of mistaking a hidden header for
+        # a lost delivery context. The base class still verifies DTU afresh.
+        if location == "DTU":
+            page = await self._page_for_session()
+            self.location_verified = False
+            self.resolved_location = None
+            await page.goto(self.homepage_url, wait_until="domcontentloaded")
+        await super().establish_location(location)
+
     async def _set_dtu_location(self, page):
         continue_web = page.get_by_text("Continue on web", exact=True)
         if await continue_web.count() and await continue_web.is_visible():

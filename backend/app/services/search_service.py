@@ -85,6 +85,7 @@ class SearchService:
     def __init__(self, providers: dict[str, GroceryProvider], cache_ttl_seconds: int = settings.cache_ttl_seconds, cache: HotQueryCache | None = None):
         self.providers = providers
         self.cache = cache or HotQueryCache(ttl_seconds=cache_ttl_seconds)
+        self.provider_locks = {name: asyncio.Lock() for name in providers}
 
     async def search(self, query: str, location: str = "DTU") -> SearchResponse:
         cleaned_query = query.strip()
@@ -97,6 +98,11 @@ class SearchService:
             return cached[0]
 
         async def run_provider(name: str, provider: GroceryProvider):
+            # A provider owns one browser tab; location and search are atomic.
+            async with self.provider_locks[name]:
+                return await run_provider_locked(name, provider)
+
+        async def run_provider_locked(name: str, provider: GroceryProvider):
             started = time.monotonic()
             try:
                 await provider.establish_location(location)
@@ -109,7 +115,7 @@ class SearchService:
                 logger.warning("provider_failure query=%s provider=%s duration_ms=%d reason=%s", cleaned_query, name, (time.monotonic() - started) * 1000, error.code)
                 return name, [], "unavailable", error.code
             except Exception as error:
-                logger.warning("provider_failure query=%s provider=%s duration_ms=%d error=%s", cleaned_query, name, (time.monotonic() - started) * 1000, type(error).__name__)
+                logger.exception("provider_failure query=%s provider=%s duration_ms=%d error=%s", cleaned_query, name, (time.monotonic() - started) * 1000, type(error).__name__)
                 return name, [], "unavailable", "Provider could not verify DTU delivery context or complete the search."
 
         provider_results = await asyncio.gather(*(run_provider(name, provider) for name, provider in self.providers.items()))

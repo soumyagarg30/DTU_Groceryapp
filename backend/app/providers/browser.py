@@ -54,7 +54,13 @@ class DesktopWebsiteProvider(GroceryProvider):
             try:
                 self._context = await self._playwright.chromium.launch_persistent_context(str(profile), headless=self.headless, channel=self.browser_channel or None, **context_options)
             except Exception:
-                self._context = await self._playwright.chromium.launch_persistent_context(str(profile), headless=self.headless, **context_options)
+                try:
+                    self._context = await self._playwright.chromium.launch_persistent_context(str(profile), headless=self.headless, **context_options)
+                except Exception as error:
+                    logger.warning("persistent browser profile unavailable for %s; using a temporary session: %s", self.name, type(error).__name__)
+                    self.persistent_context = False
+                    self._browser = await self._playwright.chromium.launch(headless=self.headless, channel=self.browser_channel or None)
+                    self._context = await self._browser.new_context(**context_options)
         else:
             try:
                 self._browser = await self._playwright.chromium.launch(headless=self.headless, channel=self.browser_channel or None)

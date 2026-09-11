@@ -14,6 +14,7 @@ function ageLabel(age: number, cached: boolean) {
   return cached ? `Cached result • ${minutes}m old` : `Checked ${minutes}m ago`
 }
 function providerMessage(message: string) {
+  if (message === 'profile_locked_login_required') return 'The saved Zepto browser profile is already open, so this search used a temporary session without your login. Close the Zepto browser window, restart the backend, log in there, and search again.'
   if (message === 'login_required') return 'Sign-in required. Log in through the store browser window opened by this backend, then search again. A login in a different browser profile will not update this session.'
   if (message === 'selector_failure') return 'The store’s search results could not be read. Please try searching again.'
   return message === 'blocked' ? 'Automated access was blocked by the provider. No security bypass was attempted.' : message

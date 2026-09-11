@@ -75,7 +75,7 @@ class ZeptoProvider(DesktopWebsiteProvider):
             search_link = page.locator("a[href='/search'], a[href*='/search']").first
             if await search_link.count() and await search_link.is_visible():
                 await search_link.click()
-                await page.wait_for_timeout(600)
+                await page.locator("input[placeholder*='Search for over' i]").first.wait_for(state="visible")
             field = await self._visible_first(page, self.search_inputs)
         if field is None:
             raise RuntimeError("Zepto search input was not found")

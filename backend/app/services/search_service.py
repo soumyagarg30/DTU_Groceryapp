@@ -130,7 +130,10 @@ class SearchService:
                 return name, listings, "ok", ""
             except ProviderSearchError as error:
                 logger.warning("provider_failure query=%s provider=%s duration_ms=%d reason=%s", cleaned_query, name, (time.monotonic() - started) * 1000, error.code)
-                return name, [], "unavailable", error.code
+                message = error.code
+                if error.code == "login_required" and getattr(provider, "persistent_context", True) is False:
+                    message = "profile_locked_login_required"
+                return name, [], "unavailable", message
             except Exception as error:
                 logger.exception("provider_failure query=%s provider=%s duration_ms=%d error=%s", cleaned_query, name, (time.monotonic() - started) * 1000, type(error).__name__)
                 return name, [], "unavailable", "Provider could not verify DTU delivery context or complete the search."

@@ -151,3 +151,13 @@ cd backend
 python3 -m app.scripts.bootstrap_provider zepto
 ```
 Select Delhi Technological University / Shahbad Daulatpur in the browser and press Enter in the terminal. The adapter verifies the visible location before accepting any listing. If Zepto displays an automated-access block or CAPTCHA, stop; the provider is reported as blocked and no evasion is attempted.
+
+## Hostel Basket Planner
+
+Add high-confidence, in-stock search results to a basket (up to 12 distinct products), then adjust pack counts. The planner checks every possible Blinkit/Zepto allocation and recommends the lowest estimated total including per-store delivery and handling fees. Equal totals prefer fewer checkouts. Editable free-delivery thresholds can change which allocation wins.
+
+The planner includes complete single-store comparisons, savings against the cheapest complete single-store basket, budget tracking, and an equal roommate split that distributes leftover paise exactly. Search timestamps and demo labels stay attached to basket items. The basket lasts for the current page session.
+
+Fees default to illustrative values, not provider quotes. Update them from checkout. Prices are snapshots; remove and re-add items after a fresh search to update them. Coupons, minimum orders, surge fees, and checkout availability are not modeled.
+
+`POST /api/basket/optimize` accepts `items` (name, quantity, nullable blinkit/zepto prices) and `blinkit`/`zepto` fee objects (`delivery`, `handling`, nullable `free_above`). It calculates from supplied prices and does not verify them or place orders. Monetary calculations use integer paise; requests are bounded to 12 items and 99 packs per item.

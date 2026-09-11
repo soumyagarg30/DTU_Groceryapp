@@ -9,6 +9,7 @@ export interface Listing {
   quantity_text?: string | null
   available: boolean
   product_url?: string
+  image_url?: string | null
   source: ProviderName
   unit_price?: number | null
   observation_id?: string

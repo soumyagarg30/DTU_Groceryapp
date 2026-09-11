@@ -22,7 +22,8 @@ function providerMessage(message: string) {
 function ProviderListing({ listing, provider, unavailable }: { listing?: Listing; provider: ProviderName; unavailable: boolean }) {
   if (!listing) return <div className="listing missing"><div className="listing-heading"><Store size={15} />{providerLabel(provider)}</div><p>{unavailable ? 'Currently unavailable' : 'No confident match'}</p></div>
   return <div className="listing">
-    <div className="listing-heading"><Store size={15} />{providerLabel(provider)}<span className={listing.available ? 'availability' : 'availability muted'}>{listing.available ? 'In stock' : 'Unavailable'}</span></div>
+    <div className="listing-heading"><div className="listing-provider"><Store size={15} />{providerLabel(provider)}</div><span className={listing.available ? 'availability' : 'availability muted'}>{listing.available ? 'In stock' : 'Unavailable'}</span></div>
+    <div className="listing-product"><div className="product-image">{listing.image_url ? <img src={listing.image_url} alt="" loading="lazy" /> : <Store size={22} />}</div><p>{listing.title}</p></div>
     <div className="price-row"><strong>{money(listing.price)}</strong>{listing.mrp && listing.mrp > listing.price && <del>{money(listing.mrp)}</del>}</div>
     {listing.unit_price != null && <p className="unit-price">{money(listing.unit_price)} / {listing.unit_price_basis}</p>}
     <p>{listing.quantity_text ?? 'Quantity unavailable'}</p><p className="verified">✓ DTU verified</p>

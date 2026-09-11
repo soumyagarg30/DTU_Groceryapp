@@ -169,7 +169,7 @@ class SearchService:
     @staticmethod
     def _public(listing: ProductListing) -> PublicListing:
         unit_price = calculate_unit_price(listing)
-        return PublicListing(title=listing.title, price=listing.price, mrp=listing.mrp, currency=listing.currency, quantity_text=listing.quantity_text, available=listing.available, product_url=listing.product_url, source=listing.provider, unit_price=unit_price.unit_price if unit_price else None, unit_price_basis=unit_price.unit_price_basis if unit_price else None)
+        return PublicListing(title=listing.title, price=listing.price, mrp=listing.mrp, currency=listing.currency, quantity_text=listing.quantity_text, available=listing.available, product_url=listing.product_url, image_url=listing.image_url, source=listing.provider, unit_price=unit_price.unit_price if unit_price else None, unit_price_basis=unit_price.unit_price_basis if unit_price else None)
 
     def _comparison(self, blinkit: ProductListing, zepto: ProductListing, score: float, confidence: str, breakdown) -> ComparisonResult:
         comparable = score >= settings.match_high_threshold and blinkit.available and zepto.available

@@ -14,3 +14,6 @@ debug/
 .DS_Store
 .env.*
 !.env.example
+
+*.sqlite3
+*.sqlite3-*

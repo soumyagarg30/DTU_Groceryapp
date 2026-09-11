@@ -4,6 +4,11 @@ from pydantic import BaseModel, Field
 from .product import ProductListing
 
 
+class PriceObservation(BaseModel):
+    at: str
+    price: float
+
+
 class PublicListing(BaseModel):
     title: str
     price: float
@@ -12,9 +17,12 @@ class PublicListing(BaseModel):
     quantity_text: str | None = None
     available: bool
     product_url: str | None = None
+    image_url: str | None = None
     source: Literal["blinkit", "zepto"]
     unit_price: float | None = None
     unit_price_basis: str | None = None
+    observation_id: str | None = None
+    price_history: list[PriceObservation] = Field(default_factory=list)
 
 
 class Quantity(BaseModel):
